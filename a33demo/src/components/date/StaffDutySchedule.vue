@@ -143,118 +143,153 @@
     </v-row>
   </template>
   
-  <script>
-    export default {
-      data: () => ({
-        drawer: false,
-        direction: 'rtl',
-        focus: '',
-        // event 用于获取该事件的对象值
-        event: {},
-        type: 'month',
-        typeToLabel: {
-          month: 'Month',
-          week: 'Week',
-          day: 'Day',
-          '4day': '4 Days',
-        },
-        selectedEvent: {},
-        selectedElement: null,
-        selectedOpen: false,
-        events: [],
-        colors: ['blue', 'indigo', 'deep-purple', 'cyan', 'green', 'orange', 'grey darken-1'],
-        names: ['Meeting', 'Holiday', 'PTO', 'Travel', 'Event', 'Birthday', 'Conference', 'Party'],
-      }),
-      mounted () {
-        this.$refs.calendar.checkChange()
+<script>
+import { get } from '@/util/axios';
+  export default {
+    data: () => ({
+      drawer: false,
+      direction: 'rtl',
+      focus: '',
+      // event 用于获取该事件的对象值
+      event: {},
+      type: 'month',
+      typeToLabel: {
+        month: 'Month',
+        week: 'Week',
+        day: 'Day',
+        '4day': '4 Days',
       },
-      methods: {
-        handleClose(done) {
-          this.$confirm('确认关闭？')
-            .then(() => {
-              done();
-            })
-            .catch(() => {});
-        },
-        // 显示当天数据
-        viewDay ({ date }) {
-            // console.log(date);
-            this.focus = date
-            this.type = 'day'
-        },
-        // 获取事件颜色
-        getEventColor (event) {
-            return event.color
-        },
-        // 跳转到今天
-        setToday () {
-            this.focus = ''
-        },
-        // 上一页
-        prev () {
-            this.$refs.calendar.prev()
-        },
-        // 下一页
-        next () {
-          this.$refs.calendar.next()
-        },
-        // 显示事件
-        showEvent ({ nativeEvent, event }) {
-            console.log(nativeEvent);
-            console.log(nativeEvent.target);
-            console.log(event);
-            this.event = event;
-          const open = () => {
-            this.selectedEvent = event
-            this.selectedElement = nativeEvent.target
-            setTimeout(() => this.selectedOpen = true, 10)
-          }
-  
-          if (this.selectedOpen) {
-            this.selectedOpen = false
-            setTimeout(open, 10)
-          } else {
-            open()
-          }
-  
-        /**
-         * stopPropagation()
-         * Event 接口的stopPropagation() 方法
-         * 阻止捕获和冒泡阶段中当前事件的进一步传播。
-         */
-          nativeEvent.stopPropagation()
-        },
-        // 更新随机数据
-        updateRange ({ start, end }) {
-          const events = []
-  
-          const min = new Date(`${start.date}T00:00:00`)
-          const max = new Date(`${end.date}T23:59:59`)
-          const days = (max.getTime() - min.getTime()) / 86400000
-          const eventCount = this.rnd(days, days + 20)
-  
-          for (let i = 0; i < eventCount; i++) {
-            const allDay = this.rnd(0, 3) === 0
-            const firstTimestamp = this.rnd(min.getTime(), max.getTime())
-            const first = new Date(firstTimestamp - (firstTimestamp % 900000))
-            const secondTimestamp = this.rnd(2, allDay ? 288 : 8) * 900000
-            const second = new Date(first.getTime() + secondTimestamp)
-  
-            events.push({
-              name: this.names[this.rnd(0, this.names.length - 1)],
-              start: first,
-              end: second,
-              color: this.colors[this.rnd(0, this.colors.length - 1)],
-              timed: !allDay,
-            })
-          }
-          
-          console.log(events[0].name);
-          this.events = events
-        },
-        rnd (a, b) {
-          return Math.floor((b - a + 1) * Math.random()) + a
-        },
+      selectedEvent: {},
+      selectedElement: null,
+      selectedOpen: false,
+      events: [],
+      colors: ['blue', 'indigo', 'deep-purple', 'cyan', 'green', 'orange', 'grey darken-1'],
+      names: ['Meeting', 'Holiday', 'PTO', 'Travel', 'Event', 'Birthday', 'Conference', 'Party'],
+      // names: [],
+    }),
+    mounted () {
+      this.$refs.calendar.checkChange()
+    },
+    methods: {
+      /**
+       * 获取所有员工信息
+       * @return staff_data 获取到所有员工的信息
+       */
+      get_staff_data(){
+        // 所有门店员工信息
+        let staff_data = get('/staff/findAll');
+        staff_data.then(val=>{
+          console.log(val);
+        });
+
+        // this.names = staff_data;
+        return staff_data;
       },
-    }
-  </script>
+      handleClose(done) {
+        this.$confirm('确认关闭？')
+          .then(() => {
+            done();
+          })
+          .catch(() => {});
+      },
+      // 显示当天数据
+      viewDay ({ date }) {
+          // console.log(date);
+          this.focus = date
+          this.type = 'day'
+      },
+      // 获取事件颜色
+      getEventColor (event) {
+          return event.color
+      },
+      // 跳转到今天
+      setToday () {
+          this.focus = ''
+      },
+      // 上一页
+      prev () {
+          this.$refs.calendar.prev()
+      },
+      // 下一页
+      next () {
+        this.$refs.calendar.next()
+      },
+      // 显示事件
+      showEvent ({ nativeEvent, event }) {
+          console.log(nativeEvent);
+          console.log(nativeEvent.target);
+          console.log(event);
+          this.event = event;
+        const open = () => {
+          this.selectedEvent = event
+          this.selectedElement = nativeEvent.target
+          setTimeout(() => this.selectedOpen = true, 10)
+        }
+
+        if (this.selectedOpen) {
+          this.selectedOpen = false
+          setTimeout(open, 10)
+        } else {
+          open()
+        }
+
+      /**
+       * stopPropagation()
+       * Event 接口的stopPropagation() 方法
+       * 阻止捕获和冒泡阶段中当前事件的进一步传播。
+       */
+        nativeEvent.stopPropagation()
+      },
+      /**
+       * 更新随机数据
+       * @param {*} param0 开始 结束时间
+       */
+      updateRange ({ start, end }) {
+
+        // 排班时间 早上9点 到 晚上 10 点
+        let res1 = get('/Shift/selectByStoreId/1')
+        res1.then(val => {
+          console.log(val);
+          return val;
+        })
+        console.log(res1);
+      
+        console.log(this.get_staff_data());
+        console.log(get('/staff/fiindAll'));
+
+        const events = []
+
+        // 开始结束时间
+        const min = new Date(`${start.date}T00:00:00`)
+        const max = new Date(`${end.date}T23:59:59`)
+
+        const days = (max.getTime() - min.getTime()) / 86400000
+
+        const eventCount = this.rnd(days, days + 20)
+
+        for (let i = 0; i < eventCount; i++) {
+          const allDay = this.rnd(0, 3) === 0
+          const firstTimestamp = this.rnd(min.getTime(), max.getTime())
+          const first = new Date(firstTimestamp - (firstTimestamp % 900000))
+          const secondTimestamp = this.rnd(2, allDay ? 288 : 8) * 900000
+          const second = new Date(first.getTime() + secondTimestamp)
+
+          events.push({
+            name: this.names[this.rnd(0, this.names.length - 1)],
+            start: first,
+            end: second,
+            color: this.colors[this.rnd(0, this.colors.length - 1)],
+            timed: !allDay,
+          })
+        }
+        
+        console.log(events[0].name);
+        this.events = events
+        console.log(this.events);
+      },
+      rnd (a, b) {
+        return Math.floor((b - a + 1) * Math.random()) + a
+      },
+    },
+  }
+</script>

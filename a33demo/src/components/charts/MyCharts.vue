@@ -1,7 +1,8 @@
 <template>
     <div id="main">
-        <!-- echart 显示图像 -->
+        <!-- echart 客流量图像 -->
         <div id="box"></div>
+        <!-- 日期选择器 -->
         <div id="calendar">
             <template>
                 <v-date-picker
@@ -14,41 +15,15 @@
                 ></v-date-picker>
             </template>
         </div>
+        <!-- 店面选择器 -->
         <div id="screeningBox">
-            <!-- <template>
-                <v-container fluid>
-                    <v-combobox
-                    v-model="model"
-                    :items="items"
-                    :search-input.sync="search"
-                    hide-selected
-                    hint="最多选择一个门店"
-                    label="选择需要查看的门店"
-                    multiple
-                    persistent-hint
-                    small-chips
-                    >
-                    <template v-slot:no-data>
-                        <v-list-item>
-                        <v-list-item-content>
-                            <v-list-item-title>
-                            No results matching "<strong>{{ search }}</strong>". Press <kbd>enter</kbd> to create a new one
-                            </v-list-item-title>
-                        </v-list-item-content>
-                        </v-list-item>
-                    </template>
-                    </v-combobox>
-                </v-container>
-            </template> -->
-
             <template>
                 <v-container fluid>
                     <v-row>
-                        <v-col class="d-flex" cols="40" sm="10">
+                        <v-col class="d-flex" cols="70">
                             <v-select
                             :items="items"
                             v-model="model"
-                            @change="change()"
                             label="选择你要查看的门店"
                             solo
                             ></v-select>
@@ -70,7 +45,7 @@ export default {
             // 可选日期最小值 和 最大值
             min: '',
             max: '',
-            // 获取到的总数据
+            // 通过 店铺 id 获取的数据
             Data: [],
             // 选择器 店铺选择范围 （要得到所有店铺信息）
             items: [],
@@ -168,7 +143,7 @@ export default {
                         type: 'bar',
                         yAxisIndex: 0,
                         // 数据
-                        data: []
+                        data: [],
                     },
                     {
                         name: '客流量(折线)',
@@ -186,26 +161,20 @@ export default {
     watch: {
         /**
          * 监听筛选框的数据变化
-         * @param oldQuestion 监听前的值
+         * @param oldQuestion 监听的值
          */
         model (oldQuestion) {
-            // console.log(`旧值: ${oldQuestion}`);
-            // pop() 获取该函数的最后一个值
-            // if (oldQuestion.length > 1) {
-            //     this.$nextTick(() => this.model.pop())
-            // }
-            
-            // console.log(this.shopdata.get(`${oldQuestion}`))
-            
-            // console.log(oldQuestion);
             // 获取选中的 店铺值
             let shopchoice = this.shopdata.get(`${oldQuestion}`);
             if(shopchoice){ // 如果选中值不为空 则，
                 // 获取
 
                 // 渲染
-                console.log(`此时渲染的门店: ${this.startdate}, ${shopchoice}`);
                 this.renderer(this.startdate,shopchoice);
+                // 更新店铺日期选择范围
+                this.update_shopdata(this.Data);
+                // 日历数据初始化
+                this.picker = this.min;
             }else{
                 // 默认渲染最早的时间节点
                 this.renderer(this.startdate);
@@ -220,20 +189,21 @@ export default {
          */
         async init(){
             // 获取 远程 人流量的所有数据
-            let get_res = await get(`/passenger_flow/findAll`);
-            this.Data = get_res;
+            // let get_res = await get(`/passenger_flow/findAll`);
 
-            // 改成获取 那一家店的 所有数据
-            // let shopid_res = this.get_shopinfo(2,)
+            // 默认第一个门店
+            let get_res = await this.get_shopinfo_fromid();
+            this.Data = get_res;
             
+            // 日历数据初始化
+            this.picker = (this.get_date(this.Data)).start;
+
             // 店铺选择器初始化
             let get_shop_info = await get('/shop/findAll');
             this.shop_data(get_shop_info);
             
+            // 更新店铺日期范围
             this.update_shopdata(get_res);
-        },
-        change(){
-            console.log(this.model);
         },
         /** 
          * 日期选择器更新
@@ -242,8 +212,6 @@ export default {
         async calendar_update(){
             // 获取到日期数据
             let date = await this.chart_update(this.picker);
-            console.log('获取到的数据:');
-            console.log(date);
             // 修改后 渲染 界面
             this.renderer(date);
         },
@@ -261,10 +229,10 @@ export default {
             let day = date[2];
             return `${year}${month}${day}`
         },
-/******************************************
- * 对获取数据处理     
- * 数据格式化函数 
- */ 
+    /******************************************
+     *          对获取数据处理     
+     *          数据格式化函数 
+     ******************************************/ 
         /**
          * 获取 客流量数 格式
          * @param {*} data 需要处理的数据
@@ -277,7 +245,6 @@ export default {
             arrdata.forEach((value) => {
                 res.push(parseFloat(value.forecast));
             })
-            // console.log(`日期格式化: ${res}`);
             return res;
         },
         /**
@@ -287,9 +254,7 @@ export default {
         shop_data(data){
             data.forEach((value) =>{
                 this.items.push(value.name);
-                // console.log(`${value.id}: ${value.name}`);
                 this.shopdata.set(`${value.name}`,`${value.id}`);
-                // console.log(this.shopdata);
             });
         },
         /**
@@ -318,9 +283,19 @@ export default {
         async get_shopinfo(shopid,date){
             let res = await get(`/passenger_flow/passenger/${shopid}/${date}`);
             let result = this.personal_data_format(res);
-            console.log('获取对应门店数据:');
-            console.log(result);
             return result;
+        },
+        /**
+         * 获取对应门店的数据
+         * 要给一个 最小的 默认 日期
+         * /passenger_flow/passenger/{shopid}/{date}
+         * @param {*} shopid 店铺id
+         * @return result 返回该门店对应的人流量数
+         * @author guibin
+         */
+        async get_shopinfo_fromid(shopid = 1){
+            let res = await get(`/passenger_flow/passenger/${shopid}`);
+            return res;
         },
         /**
          * 通过店铺 id 和 日期 渲染 echarts 表格
@@ -330,17 +305,27 @@ export default {
          */
         async renderer(startdate,shopid = 1){
             // console.log(`渲染处 拿到的值: ${shopid}`);
-            // 默认是从 第一家店面开始        
+            // 默认是从 第一家店面开始
             // 将数据显示上 表格
-            this.option.series[0].data = await this.get_shopinfo( shopid , startdate);
-            this.option.series[1].data = await this.get_shopinfo( shopid , startdate);
-
-            // 日历数据初始化
-            this.picker = (this.get_date(this.Data)).start;
+            let res;
+            if(startdate){
+                res = await this.get_shopinfo(shopid,startdate);
+            }else{
+                console.log('默认渲染数据');
+                res = await this.get_shopinfo_fromid( shopid );
+                res = this.personal_data_format(res);
+            }
+            // let format_res =  await this.personal_data_format(res);
             
-            // console.log(`渲染处 拿到时间的值:`);
-            // console.log(this.option.series[0]);
-            // console.log(this.option.series[1]);
+            this.option.series[0].data = res;
+            this.option.series[1].data = res;
+            
+            // // 日历数据初始化
+            // this.picker = (this.get_date(this.Data)).start;
+
+            // console.log('获取日期选择器的默认值:');
+            // console.log((this.get_date(this.Data)).start);
+
             // 表格初始化
             var myChart = echarts.init(document.getElementById('box'));
             
@@ -370,7 +355,7 @@ export default {
         this.startdate = this.min.split('-').join('');
         
         // 日历数据初始化
-        this.picker = (this.get_date(this.Data)).start;      
+        this.picker = (this.get_date(this.Data)).start;     
 
         // 表格渲染器
         this.renderer(this.startdate);
@@ -392,6 +377,7 @@ export default {
         box-shadow: 2px 7px 6px rgb(0 0 0 / 40%);
         grid-row: 1/3;
         grid-column: 1/2;
+        background: rgba(250, 250, 250,0.4);
     }
     /* 日历 */
     #calendar{
@@ -402,13 +388,16 @@ export default {
     }
     /* 筛选框 */
     #screeningBox{
-        right: 89px;
         width: 358px;
-        background: rgba(255,133,76,0.8);
+        /* background: rgba(255,133,76,0.8); */
         height: 149px;
         border-radius: 16px;
         box-shadow: 1px 2px 6px black;
-        grid-row: 2;
-        grid-column: 2;
+        /* grid-row: 2;
+        grid-column: 2; */
+        /* top: 43px; */
+        text-align: center;
+        /* justify-content: center; */
+        display: contents;
     }
 </style>

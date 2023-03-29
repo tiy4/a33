@@ -1,95 +1,122 @@
 <template>
     <div>
-        <v-simple-table :dense="dense" :fixed-header="fixedHeader" :height="height" show-select :items-per-page="5"
-            class="elevation-1">
+        <v-simple-table :fixed-header="true" class="elevation-1">
             <template v-slot:default>
                 <thead>
                     <tr>
-                        <th class="text-left">门店规则</th>
-                        <th class="text-left">时间备注</th>
+                        <th class="text-center" style="font-size: 16px;color: black;">门店规则</th>
+                        <th class=" text-center" style="font-size: 16px;color: black;">时间备注</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in desserts" :key="item.name">
-                        <td> <el-checkbox>{{ item.name }}
+                    <!-- tr是行，td是行内的格 -->
+                    <tr v-for=" (item, index) in desserts" :key="item" :class="'tr-color-' + index % 2">
+                        <td><el-checkbox>{{ item.name }}
                             </el-checkbox></td>
                         <td>
-                            <el-checkbox-group v-model="checkedtimes" :min="0" :max="1">
-                                <el-checkbox v-for="item2 in times" :label="item2" :key="item2">{{ item2 }}h</el-checkbox>
-                            </el-checkbox-group>
+                            <v-container>
+                                <v-row>
+                                    <v-col cols="24" sm="6" v-for="item2 in item.times" :key="item2">
+                                        <v-select v-model="select" :items="items" chips label="请选择" multiple
+                                            solo></v-select>
+                                    </v-col>
+                                </v-row>
+                            </v-container>
                         </td>
                     </tr>
                 </tbody>
             </template>
         </v-simple-table>
-        <v-row>
-            <v-col cols="12" md="6">
-                <v-text-field v-model="height" class="mx-4" label="Height - px" max="500" min="1" step="1"
-                    style="width: 125px" type="number" @keydown="false"></v-text-field>
-            </v-col>
-            <v-col cols="6" md="3">
-                <v-switch v-model="dense" label="Toggle dense" class="mx-4"></v-switch>
-            </v-col>
-            <v-col cols="6" md="3">
-                <v-switch v-model="fixedHeader" label="Toggle fixed-header" class="mx-4"></v-switch>
-            </v-col>
-        </v-row>
     </div>
 </template>
 <script>
-const time = [0.5, 1, 1.5, 2];
 export default {
+    methods: {
+        // tableRowClassName({ rowIndex }) {
+        //     if (rowIndex % 2 === 0) {
+        //         return 'warning-row';
+        //     } else if (rowIndex % 2 === 1) {
+        //         return 'success-row';
+        //     }
+        //     return '';
+        // },
+    },
     data() {
         return {
-            checkedtimes: [0.5],
-            times: time,
-            dense: false,
-            fixedHeader: false,
-            height: 300,
+            // height: 500,
+            select: ['0.5h'],
+            items: [
+                '0.5h',
+                '1h',
+                '1.5h',
+                '2h',
+            ],
             desserts: [
                 {
                     name: '每天开店搞卫生的提前时间：',
-                    // times: time,
+                    times: 1,
                 },
                 {
                     name: '每天关店搞卫生的时间：',
-                    // times: time,
+                    times: 1,
                 },
                 {
                     name: '客流量为0时安排一个员工',
-                    // times: null,
+                    times: null,
                 },
                 {
                     name: '员工生日当天不工作',
-                    // times: null,
+                    times: null,
                 },
                 {
                     name: '关店经理/副经理必须在',
-                    // times: null,
+                    times: null,
                 },
-                {
-                    name: 'Jelly bean',
-                    // times: null,
-                },
-                {
-                    name: 'Lollipop',
-                    // times: null,
-                },
-                {
-                    name: 'Honeycomb',
-                    // times: null,
-                },
-                {
-                    name: 'Donut',
-                    // times: null,
-                },
-                {
-                    name: 'KitKat',
-                    // times: null,
-                },
+
             ],
+            // options: [{
+            //     value: '选项1',
+            //     label: '0.5h'
+            // }, {
+            //     value: '选项2',
+            //     label: '1h'
+            // }, {
+            //     value: '选项3',
+            //     label: '1.5h'
+            // }, {
+            //     value: '选项4',
+            //     label: '2h'
+            // }],
+            value: ''
         };
 
     },
 }
 </script>
+<style>
+.tr-color-0 {
+    background: oldlace;
+    /* background: #b696eb; */
+}
+
+/* 定义余数为 1 的行颜色 */
+.tr-color-1 {
+    background: #f0f9eb;
+}
+
+.container {
+    padding: 6px;
+}
+
+.v-text-field.v-text-field--enclosed .v-text-field__details {
+    padding-top: 0px;
+    /* margin-bottom: 8px; */
+    visibility: hidden;
+    display: none
+}
+
+.theme--light.v-messages {
+    visibility: hidden;
+    display: none
+}
+</style>
