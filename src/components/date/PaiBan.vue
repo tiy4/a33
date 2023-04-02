@@ -50,13 +50,15 @@
       <v-sheet height="600">
         <!-- 
           :interval-style="intervalStyle" 
+          :event-color="getEventColor"
+
+          @change="updateRange"
         -->
         <v-calendar
           ref="calendar"
           v-model="focus"
           color="primary"
           :events="events"
-          :event-color="getEventColor"
           :type="type"
           :dark="dark"
           :event-overlap-mode="mode"
@@ -67,11 +69,8 @@
           @click:event="showEvent"
           @click:more="viewDay"
           @click:date="viewDay"
-          @change="updateRange"
           ></v-calendar>
-          <!-- hide-header -->
 
-          
           <v-menu
           v-model="selectedOpen"
           :close-on-content-click="false"
@@ -89,24 +88,10 @@
               :color="selectedEvent.color"
               dark
             >
-            <!-- 编辑 -->
-              <v-btn icon>
-                <v-icon>mdi-pencil</v-icon>
-              </v-btn>
               <!-- v-toolbar 编辑栏 -->
               <v-toolbar-title v-html="selectedEvent.name"></v-toolbar-title><br>
-              <!-- <v-toolbar-title v-html="selectedEvent.start"></v-toolbar-title><br>
-              <v-toolbar-title v-html="selectedEvent.end"></v-toolbar-title> -->
-              <!-- <v-spacer></v-spacer> -->
-              <!-- 爱心按钮 -->
-              <!-- <v-btn icon>
-                <v-icon>mdi-heart</v-icon>
-              </v-btn> -->
-              <!-- 更多按钮 -->
-              <!-- <v-btn icon>
-                <v-icon>mdi-dots-vertical</v-icon>
-              </v-btn> -->
             </v-toolbar>
+            <!-- 点击打开的编辑栏 -->
             <v-card-text>
               <span v-html="selectedEvent.details"></span>
 
@@ -114,6 +99,10 @@
                 
                 <el-form-item label="值班人">
                   <el-input v-model="event.name"></el-input>
+                </el-form-item>
+                
+                <el-form-item label="值班门店">
+                  <el-input v-model="event.shopid"></el-input>
                 </el-form-item>
 
                 <el-form-item label="值班日期">
@@ -172,7 +161,6 @@
 </template>
 
 <script>
-// import staff from '@/api/staff';
 import { get } from '@/util/axios';
 export default {
   // // 30 个 半小时 早上 8点 到 晚上 11点
@@ -202,6 +190,7 @@ export default {
     selectedOpen: false,
     // 事件
     // name: this.names[this.rnd(0, this.names.length - 1)],
+    // shopid: 店铺id
     // // 开始时间
     // start: first,
     // // 结束时间
@@ -215,7 +204,7 @@ export default {
     // 所有员工 姓名
     names: [],
     // 店铺 日程排班时间表 
-    // 早上 8点 到 晚上 11点
+    // 早上 8点 到 晚上 12点
     dateRule: [
       '8:00',
       '8:30',
@@ -248,6 +237,8 @@ export default {
       '22:00',
       '22:30',
       '23:00',
+      '23:30',
+      '00:00',
     ],
     // 日历单日 时长
     intervals: {
@@ -268,6 +259,8 @@ export default {
   }),
   mounted () {
     this.$refs.calendar.checkChange()
+    // 更新数据
+    this.updateRange();
   },
   methods: {
     /**
@@ -283,6 +276,7 @@ export default {
       });
       return res_data_staff;
     },
+    // 提交数据
     onSubmit(){
       console.log('提交');
     },
@@ -317,10 +311,6 @@ export default {
     },
     // 显示事件
     showEvent ({ nativeEvent, event }) {
-        // console.log(nativeEvent);
-        // console.log(nativeEvent.target);
-        // console.log(event);
-
         this.event = event;
         // console.log(this.event);
         const open = () => {
@@ -344,13 +334,16 @@ export default {
         nativeEvent.stopPropagation()
     },
     /**
+     * 根据日期所做的排班整理
      * 排班 日期格式处理  需要整理好每次的 event
      * @param id 该次班的员工id  例如 1
-     * @param date 传入排班数据  例如 000011010100111100000001000000
+     * @param shopid 店铺id
+     * @param date 传入排班数据  例如 0000 1101 0100 1111 0000 0001 0000 00
      * @param workDate 该员工排班日期 例如 2023-05-10
+     * @param color 该员工演示的颜色
      * @return { events } 返回需要排班的员工的基本排班信息
      */
-    paiban_date_format(id,date,workDate){
+    paiban_date_format(id,shopid,date,workDate,color){
       // console.log(this.names);
       let date_res = Array.from(date);
       // 该员工的当日所有排班事件
@@ -358,12 +351,10 @@ export default {
       // 单个排班事件
       let event = {
         name: '',
+        shopid: shopid,
         start: '',
         end: '',
-        color: `rgb(${this.getRandomArbitrary(0,255)},
-        ${this.getRandomArbitrary(0,255)},
-        ${this.getRandomArbitrary(0,255)}
-        )`,
+        color: color,
         timed: true,
       };
 
@@ -410,34 +401,56 @@ export default {
       return target;
     },
     /**
+     * 获取所有门店
+     * @return { res } 返回所有门店信息
+     */
+    async get_allshop(){
+      let res = await get('/shop/findAll')
+      return res;
+    },
+    /**
      * 更新随机数据
      */
     async updateRange () {
-
-      // 排班时间 早上9点 到 晚上 10 点
-      let res = get('/Shift/selectByStoreId/1');
-      let res_paiban = await res.then(val => {
-        return val;
-      })
-      // 排版信息解析格式
-      // console.log(this.paiban_format(res_paiban));
+      // 获取所有员工信息
+      let shops = await this.get_allshop();
       
       // 获取所有员工姓名
       this.names = await this.get_staff_data();
-      
-      // 排班信息格式处理  id  排班信息   排班日期yyyymmdd
-      this.paiban_data
-      = this.paiban_date_format( 1,
-        res_paiban[1].shiftScheduling,
-        res_paiban[1].workDate);
-        
-      console.log(this.paiban_data);
-      
+
+      // 将所有数据处理成可以显示的格式
+      for(let i=1; i<=shops.length; i++){
+        // 排班时间 早上 8 点 到 晚上 12 点
+        // let res = get(`/Shift/selectByStoreId/${i}`);
+        let res = get(`/Shift/findAllByStoreId/${i}`);
+        let res_paiban = await res.then(val => {
+          return val;
+        })
+        // console.log(res_paiban);
+        // 排班信息格式处理  id  排班信息   排班日期yyyymmdd
+        res_paiban.forEach((val)=>{
+          let paiban = this.paiban_date_format(
+            // 员工id
+            val.staffId,
+            // 门店id
+            i,
+            // 门店排班数据 
+            val.shiftScheduling,
+            // 排班日期
+            val.workDate,
+            // 对应颜色 不用 0 到 255 是因为 防止出现浅色背景
+            `rgb(${this.getRandomArbitrary(0,100)},
+            ${this.getRandomArbitrary(0,100)},
+            ${this.getRandomArbitrary(0,100)}
+            )`);
+            
+            // 处理好的数据插入  
+            // ... 数组解构 变成对象
+            // console.log(...paiban);
+            this.paiban_data.push(...paiban);
+        });
+      }
       this.events = this.paiban_data;
-      console.log(this.events);
-    },
-    rnd (a, b) {
-      return Math.floor((b - a + 1) * Math.random()) + a
     },
     // 获取随机数
     getRandomArbitrary(min, max) {
