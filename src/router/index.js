@@ -52,6 +52,10 @@ const router = new VueRouter({
       path: '/header',
       component: () => import('@/components/home/HeaderView.vue')
     },
+    {
+      path: '/test',
+      component: () => import('@/components/date/FullCalendar.vue')
+    },
   ]
 })
 // 向外共享路由的实例对象
