@@ -41,19 +41,19 @@
 <style>
 @import url('@/assets/css/MianMiddle.css');
 .slider2-box li:nth-child(1){
-    background: url('../../assets/OIP-C.jpg') no-repeat;
+    background: url('@/assets/OIP-C.jpg') no-repeat;
 }
 .slider2-box li:nth-child(2){
-    background: url('../../assets/home-slider2-1.c58a2da7.png') no-repeat;
+    background: url('@/assets/home-slider2-1.c58a2da7.png') no-repeat;
 }
 .slider2-box li:nth-child(3){
-    background: url('../../assets/home-slider2-4.2131a6bc.png') no-repeat;
+    background: url('@/assets/home-slider2-4.2131a6bc.png') no-repeat;
 }
 .slider2-box li:nth-child(4){
-    background: url('../../assets/R-C.jpg') no-repeat;
+    background: url('@/assets/R-C.jpg') no-repeat;
 }
 .slider2-box li:nth-child(5){
-    background: url('../../assets/1080-x-1920-Image-Vertical-Free-Download.jpg') no-repeat;
+    background: url('@/assets/1080-x-1920-Image-Vertical-Free-Download.jpg') no-repeat;
 }
 </style>
 

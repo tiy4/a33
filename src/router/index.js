@@ -26,31 +26,31 @@ const router = new VueRouter({
     },
     {
       path: '/paiban',
-      component: () => import('@/components/date/PaiBan.vue')
+      component: () => import('@/components/paiban/PaiBan.vue')
     },
     {
       path: '/shoprule',
-      component: () => import('@/components/date/ShopRule.vue')
+      component: () => import('@/components/shop/ShopRule.vue')
     },
     {
       path: '/emploerhobby',
-      component: () => import('@/components/date/EmploerHobby.vue')
+      component: () => import('@/components/emploer/EmploerHobby.vue')
     },
     {
       path: '/StaffAll',
-      component: () => import('@/components/date/StaffAll.vue')
+      component: () => import('@/components/staff/StaffAll.vue')
     },
     {
       path: '/MianMiddle',
-      component: () => import('@/components/home/MianMiddle.vue')
+      component: () => import('@/components/home/model/MianMiddle.vue')
     },
     {
       path: '/aboutme',
-      component: () => import('@/components/date/AboutMe.vue')
+      component: () => import('@/components/about/AboutMe.vue')
     },
     {
       path: '/header',
-      component: () => import('@/components/home/HeaderView.vue')
+      component: () => import('@/components/home/model/HeaderView.vue')
     },
     {
       path: '/test',

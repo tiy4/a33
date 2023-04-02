@@ -11,13 +11,4 @@
         </div>
     </div>
 </template>
-<style>
-.jumplinkmore {
-    margin-top: 10%;
-    text-align: center;
-}
-
-.jumplinkmore a {
-    text-decoration: none;
-}
-</style>
+<style src="@/components/about/css/index.css"></style>

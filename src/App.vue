@@ -12,7 +12,7 @@
   </div>
 </template>
 <script>
-import HeaderView from '@/components/home/HeaderView.vue';
+import HeaderView from '@/components/home/model/HeaderView.vue';
 export default {
     components: { HeaderView }
 }
