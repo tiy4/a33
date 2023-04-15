@@ -1,0 +1,21 @@
+.tr-color-0 {
+    background: oldlace;
+}
+
+/* 定义余数为 1 的行颜色 */
+.tr-color-1 {
+    background: #f0f9eb;
+}
+#hobbybody {
+    background: #fff;
+    margin: 0px auto;
+    border-radius: 14px;
+}
+.text-center{
+    white-space: nowrap;
+    padding: 2px 5px;
+    color: #303133;
+    font-weight: 700;
+    margin-bottom: -1px;
+    padding-bottom: 15px;
+}

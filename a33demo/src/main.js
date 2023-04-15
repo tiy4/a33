@@ -12,8 +12,10 @@ Vue.use(ElementUI);
 axios.defaults.baseURL = '/api'
 Vue.prototype.$echarts = echarts
 Vue.config.productionTip = false
+Vue.prototype.$axios = axios;
 
 new Vue({
+  axios,
   vuetify,
   router,
   render: h => h(App)
